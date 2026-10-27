@@ -9,6 +9,7 @@ import jm.scene.core.proc.CpuInfo
 import jm.scene.core.proc.CpuTemp
 import jm.scene.core.proc.GpuInfo
 import jm.scene.core.proc.MemInfo
+import jm.scene.core.proc.MemoryInfo
 import jm.scene.core.proc.ProcStat
 import jm.scene.core.proc.SwapEntry
 import jm.scene.core.root.Root
