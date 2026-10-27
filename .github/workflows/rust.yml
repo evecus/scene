@@ -1,0 +1,55 @@
+name: build-rust
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-linux-android
+
+      - name: Setup Android NDK
+        id: ndk
+        uses: nttld/setup-ndk@v1
+        with:
+          ndk-version: r27c
+          add-to-path: false
+
+      - name: Build scene-rs (aarch64)
+        working-directory: native/scene-rs
+        env:
+          ANDROID_NDK_HOME: ${{ steps.ndk.outputs.ndk-path }}
+        run: |
+          export CARGO_TARGET_AARCH64_LINUX_ANDROID_LINKER="$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android29-clang"
+          cargo build --release --target aarch64-linux-android
+          mkdir -p ../../app/src/main/assets/native
+          cp target/aarch64-linux-android/release/scene-rs ../../app/src/main/assets/native/scene-rs
+          file ../../app/src/main/assets/native/scene-rs
+          sha256sum ../../app/src/main/assets/native/scene-rs
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: scene-rs-aarch64
+          path: app/src/main/assets/native/scene-rs
+
+      - name: Commit binary back to repo
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add app/src/main/assets/native/scene-rs
+          if git diff --cached --quiet; then
+            echo "二进制无变化，跳过提交"
+          else
+            git commit -m "ci: update scene-rs binary [skip ci]"
+            git push
+          fi
