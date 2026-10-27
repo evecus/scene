@@ -8,7 +8,7 @@ import jm.scene.core.proc.Cluster
 import jm.scene.core.proc.CpuInfo
 import jm.scene.core.proc.CpuTemp
 import jm.scene.core.proc.GpuInfo
-import jm.scene.core.proc.MemoryInfo
+import jm.scene.core.proc.MemInfo
 import jm.scene.core.proc.ProcStat
 import jm.scene.core.proc.SwapEntry
 import jm.scene.core.root.Root
@@ -68,7 +68,7 @@ class OverviewViewModel : ViewModel() {
 
     private suspend fun collect(clusters: List<Cluster>, soc: String): OverviewState =
         withContext(Dispatchers.IO) {
-            val mem = MemoryInfo.load()
+            val mem = MemInfo.load()
             val gpu = jm.scene.core.proc.GpuInfoLoader.load()
 
             // CPU 负载：两次 /proc/stat 采样差分
