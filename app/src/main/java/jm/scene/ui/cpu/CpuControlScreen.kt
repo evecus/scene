@@ -36,6 +36,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import jm.scene.core.control.CpuClusterState
 import jm.scene.core.control.CpuControl
+import jm.scene.core.root.Root
 import jm.scene.ui.theme.Blue
 import jm.scene.ui.theme.Orange
 import kotlinx.coroutines.Dispatchers
@@ -60,16 +61,20 @@ class CpuControlViewModel : ViewModel() {
     fun refresh() {
         viewModelScope.launch(Dispatchers.IO) {
             if (map.isEmpty()) {
-                map = mutableListOf<Pair<String, List<Int>>>().also { out ->
-                    val base = "/sys/devices/system/cpu/cpufreq"
-                    Root.cmd("ls -d $base/policy* 2>/dev/null").map { it.substringAfterLast('/') }
-                        .forEach { p ->
-                            val related = Root.readText("$base/$p/related_cpus")
-                                ?.split(Regex("\\s+"))?.mapNotNull(String::toIntOrNull)
-                                ?: listOf(p.removePrefix("policy").toIntOrNull() ?: 0)
-                            out.add(p to related)
-                        }
-                }.distinctBy { it.second }
+                val out = mutableListOf<Pair<String, List<Int>>>()
+                val base = "/sys/devices/system/cpu/cpufreq"
+                val policies = Root.cmd("ls -d $base/policy* 2>/dev/null")
+                    .map { it.substringAfterLast('/') }
+                for (p in policies) {
+                    val related = Root.readText("$base/$p/related_cpus")
+                        ?.split(Regex("\\s+"))
+                        ?.mapNotNull { s -> s.toIntOrNull() }
+                        ?: emptyList()
+                    val cores = if (related.isNotEmpty()) related
+                        else listOf(p.removePrefix("policy").toIntOrNull() ?: 0)
+                    out.add(p to cores)
+                }
+                map = out.distinctBy { it.second }
             }
             val clusters = map.map { (p, cores) -> CpuControl.loadCluster(p, cores) }
             withContext(Dispatchers.Main) { _state.value = _state.value.copy(clusters = clusters) }
@@ -231,12 +236,12 @@ private fun ClusterCard(c: CpuClusterState, vm: CpuControlViewModel) {
 }
 
 @Composable
-private fun PickDialog(
+private fun <T> PickDialog(
     title: String,
-    options: List<Any>,
-    current: Any,
-    format: (Any) -> String,
-    onPick: (Any?) -> Unit,
+    options: List<T>,
+    current: T,
+    format: (T) -> String,
+    onPick: (T?) -> Unit,
 ) {
     AlertDialog(
         onDismissRequest = { onPick(null) },

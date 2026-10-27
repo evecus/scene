@@ -69,7 +69,7 @@ class OverviewViewModel : ViewModel() {
     private suspend fun collect(clusters: List<Cluster>, soc: String): OverviewState =
         withContext(Dispatchers.IO) {
             val mem = MemoryInfo.load()
-            val gpu = GpuInfo.load()
+            val gpu = jm.scene.core.proc.GpuInfoLoader.load()
 
             // CPU 负载：两次 /proc/stat 采样差分
             val curTimes = CpuInfo.sampleCpuTimes()

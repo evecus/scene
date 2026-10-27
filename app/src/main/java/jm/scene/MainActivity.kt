@@ -15,8 +15,15 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Bolt
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -154,20 +161,20 @@ private fun SubPage(title: String, onBack: () -> Unit, content: @Composable () -
 @Composable
 private fun AdjustTab(onNavigate: (String) -> Unit) {
     Column(Modifier.fillMaxSize()) {
-        androidx.compose.foundation.lazy.LazyColumn(
-            contentPadding = androidx.compose.foundation.layout.PaddingValues(12.dp),
-            verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(10.dp),
+        LazyColumn(
+            contentPadding = PaddingValues(12.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
             item {
                 Card(
-                    shape = androidx.compose.foundation.shape.RoundedCornerShape(20.dp),
-                    colors = androidx.compose.material3.CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                    shape = RoundedCornerShape(20.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                     modifier = Modifier.fillMaxWidth().clickable { onNavigate("charge") },
                 ) {
                     Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-                        androidx.compose.material3.Icon(androidx.compose.material.icons.Icons.Filled.Bolt, null, tint = Blue)
+                        Icon(Icons.Filled.Bolt, null, tint = Blue)
                         Spacer(Modifier.padding(4.dp))
-                        androidx.compose.material3.Text("充电控制", fontWeight = FontWeight.Medium)
+                        Text("充电控制", fontWeight = FontWeight.Medium)
                     }
                 }
             }

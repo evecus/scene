@@ -39,9 +39,10 @@ object SwapControl {
     fun loadZram(): ZramState {
         val base = "/sys/block/zram0"
         val mm = Root.readText("$base/mm_stat")?.trim()?.split(Regex("\\s+")) ?: emptyList()
+        val disksizeBytes = Root.readText("$base/disksize")?.trim()?.toLongOrNull() ?: 0L
         return ZramState(
             available = File(base).exists(),
-            disksizeKb = (Root.readInt("$base/disksize") ?: 0) / 1024,
+            disksizeKb = disksizeBytes / 1024,
             algo = Root.readText("$base/comp_algorithm")?.trim() ?: "",
             origDataKb = mm.getOrNull(0)?.toLongOrNull()?.div(1024) ?: 0,
             comprDataKb = mm.getOrNull(1)?.toLongOrNull()?.div(1024) ?: 0,

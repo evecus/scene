@@ -55,7 +55,10 @@ object AppManager {
                 val isSystem = (ai.flags and ApplicationInfo.FLAG_SYSTEM) != 0
                 if (filter == "system" && !isSystem) return@mapNotNull null
                 if (filter == "user" && isSystem) return@mapNotNull null
-                val frozen = ai.enabledSetting == PackageManager.COMPONENT_ENABLED_STATE_DISABLED_USER
+                val frozen = try {
+                    pm.getApplicationEnabledSetting(pi.packageName) ==
+                        PackageManager.COMPONENT_ENABLED_STATE_DISABLED_USER
+                } catch (_: Exception) { false }
                 AppEntry(
                     label = try { pm.getApplicationLabel(ai).toString() } catch (_: Exception) { pi.packageName },
                     pkg = pi.packageName,
