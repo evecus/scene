@@ -219,7 +219,7 @@ private fun BottomGrid(s: OverviewState) {
     }
     Spacer(Modifier.height(12.dp))
     Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-        InfoCard(Modifier.weight(1f), "电池", bat?.let { "${it.capacity}%  %.3fv".format(it.voltageV) } ?: "--")
+        InfoCard(Modifier.weight(1f), "电池", bat?.let { "${it.capacity}%  " + "%.3fv".format(it.voltageV) } ?: "--")
         InfoCard(Modifier.weight(1f), "已开机", s.uptimeStr.ifEmpty { "--" })
     }
     Spacer(Modifier.height(12.dp))
