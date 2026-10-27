@@ -50,6 +50,7 @@ import kotlinx.coroutines.withContext
 
 data class ChargeUiState(
     val nodes: ChargeNodes? = null,
+    val battery: jm.scene.core.proc.BatteryInfo? = null,
     val guardRunning: Boolean = false,
     val toast: String? = null,
 )
@@ -64,11 +65,16 @@ class ChargeViewModel : ViewModel() {
         contextRef = ctx.applicationContext
         viewModelScope.launch(Dispatchers.IO) {
             while (isActive) {
-                val c = contextRef ?: break
-                _state.value = _state.value.copy(
-                    nodes = ChargeControl.load(),
-                    guardRunning = ChargeControl.Guard.isRunning(c),
-                )
+                try {
+                    val c = contextRef ?: break
+                    _state.value = _state.value.copy(
+                        nodes = ChargeControl.load(),
+                        battery = jm.scene.core.proc.BatteryInfoLoader.load(),
+                        guardRunning = ChargeControl.Guard.isRunning(c),
+                    )
+                } catch (_: Exception) {
+                    // 单轮失败忽略
+                }
                 delay(2000)
             }
         }
@@ -115,7 +121,7 @@ fun ChargeScreen(vm: ChargeViewModel) {
     val ctx = androidx.compose.ui.platform.LocalContext.current
     LaunchedEffect(Unit) { vm.init(ctx) }
     val s by vm.state.collectAsState()
-    val bat = remember(s.nodes) { BatteryInfoLoader.load() }
+    val bat = s.battery
     var pickLimit by remember { mutableStateOf(false) }
     var pickCc by remember { mutableStateOf(false) }
     var guardDlg by remember { mutableStateOf(false) }
@@ -137,9 +143,9 @@ fun ChargeScreen(vm: ChargeViewModel) {
             Card(shape = RoundedCornerShape(20.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     Text("电池状态", fontWeight = FontWeight.Bold)
-                    InfoLine("电量", "${bat.capacity}%  (%.3fV, %.2fW, %.0fmA)".format(bat.voltageV, bat.powerW, bat.currentMa))
-                    InfoLine("温度 / 循环", "%.1f℃ / ${bat.cycleCount}".format(bat.tempC))
-                    InfoLine("状态", bat.status)
+                    InfoLine("电量", bat?.let { "${it.capacity}%  " + "%.3fV, %.2fW, %.0fmA".format(it.voltageV, it.powerW, it.currentMa) } ?: "--")
+                    InfoLine("温度 / 循环", bat?.let { "%.1f℃ / ${it.cycleCount}".format(it.tempC) } ?: "--")
+                    InfoLine("状态", bat?.status ?: "--")
                 }
             }
         }

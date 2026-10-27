@@ -66,15 +66,19 @@ class PowerViewModel : ViewModel() {
         contextRef = ctx.applicationContext
         viewModelScope.launch(Dispatchers.IO) {
             while (isActive) {
-                val c = contextRef ?: break
-                val running = SceneRs.isRunning(c, "power")
-                val src = viewing ?: SceneRs.currentSession(c, "power")
-                val samples = src?.let { Records.parsePower(readTail(it)) } ?: emptyList()
-                _state.value = _state.value.copy(
-                    running = running,
-                    samples = samples,
-                    sessions = SceneRs.sessions(c, "power"),
-                )
+                try {
+                    val c = contextRef ?: break
+                    val running = SceneRs.isRunning(c, "power")
+                    val src = viewing ?: SceneRs.currentSession(c, "power")
+                    val samples = src?.let { Records.parsePower(readTail(it)) } ?: emptyList()
+                    _state.value = _state.value.copy(
+                        running = running,
+                        samples = samples,
+                        sessions = SceneRs.sessions(c, "power"),
+                    )
+                } catch (_: Exception) {
+                    // 单轮失败忽略，下轮重试
+                }
                 delay(1000)
             }
         }

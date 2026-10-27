@@ -65,12 +65,16 @@ class FpsViewModel : ViewModel() {
         contextRef = ctx.applicationContext
         viewModelScope.launch(Dispatchers.IO) {
             while (isActive) {
-                val ctx2 = contextRef ?: break
-                val running = SceneRs.isRunning(ctx2, "fps")
-                val src = viewing ?: SceneRs.currentSession(ctx2, "fps")
-                val samples = src?.let { Records.parseFps(readTail(it)) } ?: emptyList()
-                val sessions = SceneRs.sessions(ctx2, "fps")
-                _state.value = _state.value.copy(running = running, samples = samples, sessions = sessions)
+                try {
+                    val ctx2 = contextRef ?: break
+                    val running = SceneRs.isRunning(ctx2, "fps")
+                    val src = viewing ?: SceneRs.currentSession(ctx2, "fps")
+                    val samples = src?.let { Records.parseFps(readTail(it)) } ?: emptyList()
+                    val sessions = SceneRs.sessions(ctx2, "fps")
+                    _state.value = _state.value.copy(running = running, samples = samples, sessions = sessions)
+                } catch (_: Exception) {
+                    // 单轮失败忽略，下轮重试，避免未捕获异常导致闪退
+                }
                 delay(1000)
             }
         }
